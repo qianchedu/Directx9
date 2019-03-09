@@ -1,4 +1,5 @@
 #include <d3d9.h>
+#include <d3dx9.h>
 
 #pragma comment(lib,"d3d9.lib")
 #pragma comment(lib,"d3dx9.lib")
@@ -6,9 +7,11 @@
 
 #define WINDOW_CLASS "UGPDX"
 #define WINDOW_TITLE "Demo Window"
-
+#define WINDOW_WIDTH 640
+#define WINDOW_HEIGHT 480
 LPDIRECT3D9 g_D3D = NULL;
 LPDIRECT3DDEVICE9 g_D3DDevice = NULL;
+D3DXMATRIX g_ortho;		//d3d矩阵
 
 LPDIRECT3DVERTEXBUFFER9 g_VertexBuffer = NULL;
 //初始化D3D窗口
@@ -27,7 +30,7 @@ struct stD3DVertex
 
 };
 
-#define D3DFVF_VERTEX	(D3DFVF_XYZRHW|D3DFVF_DIFFUSE)
+#define D3DFVF_VERTEX	(D3DFVF_XYZ|D3DFVF_DIFFUSE)
 
 
 //消息处理函数
@@ -98,7 +101,7 @@ int WINAPI WinMain(HINSTANCE hInst,
 
 	//创建普通窗口
 	HWND hWnd = CreateWindow(WINDOW_CLASS, WINDOW_TITLE,WS_OVERLAPPEDWINDOW,
-		100,100,640,480,GetDesktopWindow(),NULL,hInst,NULL);
+		100,100,WINDOW_WIDTH,WINDOW_HEIGHT,GetDesktopWindow(),NULL,hInst,NULL);
 
 	if (InitializeD3D(hWnd))
 	{
@@ -194,9 +197,9 @@ void RenderScene()
 	g_D3DDevice->SetFVF(D3DFVF_VERTEX);
 	//g_D3DDevice->DrawPrimitive(D3DPT_POINTLIST, 0, 4);	//绘制4个点
 	//g_D3DDevice->DrawPrimitive(D3DPT_LINELIST,0,2);		//绘制两条线
-	//g_D3DDevice->DrawPrimitive(D3DPT_TRIANGLELIST, 0, 1);	//绘制一个三角形
+	g_D3DDevice->DrawPrimitive(D3DPT_TRIANGLELIST, 0, 1);	//绘制一个三角形
 
-	g_D3DDevice->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);	//绘制一个四边形(由两个三角形组成)
+	//g_D3DDevice->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);	//绘制一个四边形(由两个三角形组成)
 
 
 	g_D3DDevice->EndScene();
@@ -208,23 +211,32 @@ void RenderScene()
 
 bool InitializeObjects()
 {
-	unsigned long col = D3DCOLOR_XRGB(255, 255, 255);
-	
-	//定义一些数据
-	stD3DVertex objData[] = 
-	{
-		{420.0f,150.0f,0.5,1.0f,col,},
-		{420.0f,350.0f,0.5,1.0f,col,},
-		{220.0f,150.0f,0.5,1.0f,col,},
-		{220.0f,350.0f,0.5,1.0f,col,},
-	};
+	D3DXMatrixOrthoLH(&g_ortho,WINDOW_WIDTH,WINDOW_HEIGHT,0.1F,1000.0f);
 
+	//正交投影变换
+	g_D3DDevice->SetTransform(D3DTS_PROJECTION, &g_ortho);
+	//关闭光照
+	g_D3DDevice->SetRenderState(D3DRS_LIGHTING,FALSE);
+	//取消 背面消隐
+	g_D3DDevice->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
+
+
+//	unsigned long col = D3DCOLOR_XRGB(255, 255, 255);
+	//定义一些数据
 	//stD3DVertex objData[] = 
 	//{
-	//	{420.0f,150.0f,0,1.0f, D3DCOLOR_XRGB(255, 0, 255),},
-	//	{420.0f,350.0f,0,1.0f, D3DCOLOR_XRGB(0, 255, 255),},
-	//	{220.0f,150.0f,0,1.0f, D3DCOLOR_XRGB(255, 255, 0),},
+	//	{420.0f,150.0f,0.5,1.0f,col,},
+	//	{420.0f,350.0f,0.5,1.0f,col,},
+	//	{220.0f,150.0f,0.5,1.0f,col,},
+	//	{220.0f,350.0f,0.5,1.0f,col,},
 	//};
+
+	stD3DVertex objData[] = 
+	{
+		{-150.0f,-150.0f,0.1F, D3DCOLOR_XRGB(255, 255,0)},
+		{150.0f, -150.0f,0.1f, D3DCOLOR_XRGB(255, 0, 0)},
+		{0.0f,   150.0f, 0.1f, D3DCOLOR_XRGB(0, 0,255)},
+	};
 
 	//创建一个顶点缓存
 	if(FAILED(g_D3DDevice->CreateVertexBuffer(sizeof(objData), 0,D3DFVF_VERTEX, D3DPOOL_DEFAULT,&g_VertexBuffer,NULL)))
