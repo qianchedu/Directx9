@@ -1,4 +1,4 @@
 ﻿  main.cpp
-e:\work\directx\d9\directx9\directx9project1\main.cpp(239): warning C4838: 从“D3DCOLOR”转换到“float”需要收缩转换
-e:\work\directx\d9\directx9\directx9project1\main.cpp(239): warning C4305: “初始化”: 从“D3DCOLOR”到“float”截断
+e:\work\directx\d9\directx9\directx9project1\main.cpp(256): warning C4838: 从“D3DCOLOR”转换到“float”需要收缩转换
+e:\work\directx\d9\directx9\directx9project1\main.cpp(256): warning C4305: “初始化”: 从“D3DCOLOR”到“float”截断
   DirectX9Project1.vcxproj -> E:\work\DirectX\D9\Directx9\Debug\DirectX9Project1.exe

@@ -12,6 +12,7 @@
 LPDIRECT3D9 g_D3D = NULL;
 LPDIRECT3DDEVICE9 g_D3DDevice = NULL;
 D3DXMATRIX g_ortho;		//d3d矩阵
+D3DXMATRIX g_projetion;
 
 LPDIRECT3DVERTEXBUFFER9 g_VertexBuffer = NULL;
 //初始化D3D窗口
@@ -211,10 +212,16 @@ void RenderScene()
 
 bool InitializeObjects()
 {
-	D3DXMatrixOrthoLH(&g_ortho,WINDOW_WIDTH,WINDOW_HEIGHT,0.1F,1000.0f);
+	//正交矩阵
+	//D3DXMatrixOrthoLH(&g_ortho,WINDOW_WIDTH,WINDOW_HEIGHT,0.1F,1000.0f);
 
-	//正交投影变换
-	g_D3DDevice->SetTransform(D3DTS_PROJECTION, &g_ortho);
+	//透视矩阵
+	D3DXMatrixPerspectiveFovLH(&g_projetion,45.0f,WINDOW_WIDTH/WINDOW_HEIGHT,0.1f,1000.0f);
+
+	////正交投影变换
+	//g_D3DDevice->SetTransform(D3DTS_PROJECTION, &g_ortho);
+		//透视投影变换
+	g_D3DDevice->SetTransform(D3DTS_PROJECTION, &g_projetion);
 	//关闭光照
 	g_D3DDevice->SetRenderState(D3DRS_LIGHTING,FALSE);
 	//取消 背面消隐
@@ -231,11 +238,21 @@ bool InitializeObjects()
 	//	{220.0f,350.0f,0.5,1.0f,col,},
 	//};
 
-	stD3DVertex objData[] = 
+	//正交数据
+	/*stD3DVertex objData[] = 
 	{
 		{-150.0f,-150.0f,0.1F, D3DCOLOR_XRGB(255, 255,0)},
 		{150.0f, -150.0f,0.1f, D3DCOLOR_XRGB(255, 0, 0)},
 		{0.0f,   150.0f, 0.1f, D3DCOLOR_XRGB(0, 0,255)},
+	};*/
+
+
+	//透视数据
+	stD3DVertex objData[] =
+	{
+		{-0.3f,-0.3f,1.0F, D3DCOLOR_XRGB(255, 255,0)},
+		{0.3f, -0.3f,1.0f, D3DCOLOR_XRGB(255, 0, 0)},
+		{0.0f, 0.3f, 1.0f, D3DCOLOR_XRGB(0, 0,255)},
 	};
 
 	//创建一个顶点缓存
