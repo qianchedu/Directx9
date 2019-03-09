@@ -192,7 +192,12 @@ void RenderScene()
 	//输出显示3d图形
 	g_D3DDevice->SetStreamSource(0,g_VertexBuffer,0,sizeof(stD3DVertex));
 	g_D3DDevice->SetFVF(D3DFVF_VERTEX);
-	g_D3DDevice->DrawPrimitive(D3DPT_LINELIST,0,2);
+	//g_D3DDevice->DrawPrimitive(D3DPT_POINTLIST, 0, 4);	//绘制4个点
+	//g_D3DDevice->DrawPrimitive(D3DPT_LINELIST,0,2);		//绘制两条线
+	//g_D3DDevice->DrawPrimitive(D3DPT_TRIANGLELIST, 0, 1);	//绘制一个三角形
+
+	g_D3DDevice->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);	//绘制一个四边形(由两个三角形组成)
+
 
 	g_D3DDevice->EndScene();
 
@@ -213,6 +218,13 @@ bool InitializeObjects()
 		{220.0f,150.0f,0.5,1.0f,col,},
 		{220.0f,350.0f,0.5,1.0f,col,},
 	};
+
+	//stD3DVertex objData[] = 
+	//{
+	//	{420.0f,150.0f,0,1.0f, D3DCOLOR_XRGB(255, 0, 255),},
+	//	{420.0f,350.0f,0,1.0f, D3DCOLOR_XRGB(0, 255, 255),},
+	//	{220.0f,150.0f,0,1.0f, D3DCOLOR_XRGB(255, 255, 0),},
+	//};
 
 	//创建一个顶点缓存
 	if(FAILED(g_D3DDevice->CreateVertexBuffer(sizeof(objData), 0,D3DFVF_VERTEX, D3DPOOL_DEFAULT,&g_VertexBuffer,NULL)))
