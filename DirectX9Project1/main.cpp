@@ -9,32 +9,41 @@
 #define WINDOW_TITLE "Demo Window"
 #define WINDOW_WIDTH 640
 #define WINDOW_HEIGHT 480
-LPDIRECT3D9 g_D3D = NULL;
-LPDIRECT3DDEVICE9 g_D3DDevice = NULL;
 
-D3DXMATRIX g_projetion;			//透视矩阵
-D3DXMATRIX g_ViewMatrix;		//视图矩阵
-
-float g_angle = 0.0f;
-
-LPDIRECT3DVERTEXBUFFER9 g_VertexBuffer = NULL;
 //初始化D3D窗口
-bool InitializeD3D(HWND hWnd);
+bool InitializeD3D(HWND hWnd,bool fullscreen);
 bool InitializeObjects();
 void RenderScene();
 void Shutdown();
 
 
-struct stD3DVertex
-{
-	//x,y,z坐标  d3d左手坐标系		opengl 右手坐标系
-	float x, y, z, rhw;
-	unsigned long color;
+
+LPDIRECT3D9 g_D3D = NULL;
+LPDIRECT3DDEVICE9 g_D3DDevice = NULL;
 
 
-};
+D3DXMATRIX g_projetion;			//透视矩阵
+D3DXMATRIX g_ViewMatrix;		//视图矩阵
+D3DXMATRIX g_WorldMatrix;		//世界矩阵
 
-#define D3DFVF_VERTEX	(D3DFVF_XYZ|D3DFVF_DIFFUSE)
+
+//float g_angle = 0.0f;
+
+//顶点缓存
+//LPDIRECT3DVERTEXBUFFER9 g_VertexBuffer = NULL;
+
+//顶点结构
+//struct stD3DVertex
+//{
+//	//x,y,z坐标  d3d左手坐标系		opengl 右手坐标系
+//	float x, y, z, rhw;
+//	unsigned long color;
+//
+//
+//};
+
+//顶点格式
+//#define D3DFVF_VERTEX	(D3DFVF_XYZ|D3DFVF_DIFFUSE)
 
 
 //消息处理函数
@@ -107,7 +116,7 @@ int WINAPI WinMain(HINSTANCE hInst,
 	HWND hWnd = CreateWindow(WINDOW_CLASS, WINDOW_TITLE,WS_OVERLAPPEDWINDOW,
 		100,100,WINDOW_WIDTH,WINDOW_HEIGHT,GetDesktopWindow(),NULL,hInst,NULL);
 
-	if (InitializeD3D(hWnd))
+	if (InitializeD3D(hWnd,true))
 	{
 		//该功能设置指定窗口的显示状态
 		ShowWindow(hWnd, SW_SHOWDEFAULT);
@@ -146,10 +155,12 @@ int WINAPI WinMain(HINSTANCE hInst,
 	//参数1:它指定窗口类的名称。
 	//参数2:句柄的模块的创建类的实例
 	UnregisterClass(WINDOW_CLASS, hInst);
+
+	return 0;	//没写默认返回0
 }
 		
-
-bool InitializeD3D(HWND hWnd)
+//初始化D3D
+bool InitializeD3D(HWND hWnd,bool fullscreen)
 {
 
 	//显示3d图形的物理设备
@@ -169,7 +180,19 @@ bool InitializeD3D(HWND hWnd)
 	//为创建Device做准备
 	D3DPRESENT_PARAMETERS d3dpp;
 	ZeroMemory(&d3dpp,sizeof(d3dpp));
-	d3dpp.Windowed = TRUE;
+
+	//如果是全屏
+	if (fullscreen)
+	{
+		d3dpp.Windowed = FALSE;
+		d3dpp.BackBufferWidth = WINDOW_WIDTH;
+		d3dpp.BackBufferHeight = WINDOW_HEIGHT;
+
+	}
+	else
+	{
+		d3dpp.Windowed = TRUE;
+	}
 	d3dpp.BackBufferFormat = displayMode.Format;
 	d3dpp.SwapEffect = D3DSWAPEFFECT_DISCARD;
 
@@ -179,25 +202,7 @@ bool InitializeD3D(HWND hWnd)
 	}
 
 
-	//透视矩阵
-	D3DXMatrixPerspectiveFovLH(&g_projetion, 45.0f, WINDOW_WIDTH / WINDOW_HEIGHT, 0.1f, 1000.0f);
-
-		//透视投影变换
-	g_D3DDevice->SetTransform(D3DTS_PROJECTION, &g_projetion);
-
-	//3为空间中的向量
-	D3DXVECTOR3 cameraPos(0.0f,0.0f,-5.0f);
-	D3DXVECTOR3 lookAtPos(0.0f, 0.0f, 0.0f);
-	D3DXVECTOR3 upDir(0.0f, 1.0f, 0.0f);
-
-	//D3DXMatrixLookAtLH（函数创建左手坐标系的观察矩阵） 返回的是世界->视图变换矩阵
-	D3DXMatrixLookAtLH(&g_ViewMatrix,&cameraPos,&lookAtPos,&upDir);
-
-	//关闭光照
-	g_D3DDevice->SetRenderState(D3DRS_LIGHTING, FALSE);
-	//取消 背面消隐
-	g_D3DDevice->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
-
+	
 
 
 	//调用
@@ -208,17 +213,63 @@ bool InitializeD3D(HWND hWnd)
 
 }
 
-void Shutdown()
-{
-	if (g_D3DDevice != NULL) g_D3DDevice->Release();
-	if (g_D3D != NULL)g_D3D->Release();
-	if (g_VertexBuffer != NULL)g_VertexBuffer->Release();
 
-	g_D3DDevice = NULL;
-	g_D3D = NULL;
-	g_VertexBuffer = NULL;
+//初始化对象
+bool InitializeObjects()
+{
+
+
+	//透视矩阵
+	D3DXMatrixPerspectiveFovLH(&g_projetion, 45.0f, WINDOW_WIDTH / WINDOW_HEIGHT, 0.1f, 1000.0f);
+
+	//透视投影变换
+	g_D3DDevice->SetTransform(D3DTS_PROJECTION, &g_projetion);
+	//关闭光照
+	g_D3DDevice->SetRenderState(D3DRS_LIGHTING, FALSE);
+	//3为空间中的向量
+	D3DXVECTOR3 cameraPos(0.0f, 0.0f, -1.0f);		//相机位置
+	D3DXVECTOR3 lookAtPos(0.0f, 0.0f, 0.0f);		//
+	D3DXVECTOR3 upDir(0.0f, 1.0f, 0.0f);
+
+	//D3DXMatrixLookAtLH（函数创建左手坐标系的观察矩阵） 返回的是世界->视图变换矩阵
+	D3DXMatrixLookAtLH(&g_ViewMatrix, &cameraPos, &lookAtPos, &upDir);
+
+	
+	//取消 背面消隐
+	//g_D3DDevice->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
+
+
+	//透视数据
+	//stD3DVertex objData[] =
+	//{
+	//	{-0.3f,-0.3f,0.0F, D3DCOLOR_XRGB(255, 255,0)},
+	//	{0.3f, -0.3f,0.0f, D3DCOLOR_XRGB(255, 0, 0)},
+	//	{0.0f, 0.3f, 0.0f, D3DCOLOR_XRGB(0, 0,255)},
+	//};
+
+	//创建一个顶点缓存
+	//if (FAILED(g_D3DDevice->CreateVertexBuffer(sizeof(objData), 0, D3DFVF_VERTEX, D3DPOOL_DEFAULT, &g_VertexBuffer, NULL)))
+	//	return false;
+
+	//void *ptr;
+
+	//if (g_VertexBuffer->Lock(0, sizeof(objData), (void **)&ptr, 0))
+	//	return false;
+
+	////数据中的数据拷贝到顶点缓存中
+	//memcpy(ptr, objData, sizeof(objData));
+
+	////解锁
+	//g_VertexBuffer->Unlock();
+
+	return true;
+
+
 }
 
+
+
+//渲染场景
 void RenderScene()
 {
 	g_D3DDevice->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_XRGB(0, 0, 0),1.0f,0);
@@ -228,11 +279,11 @@ void RenderScene()
 		
 
 	//输出显示3d图形
-	g_D3DDevice->SetStreamSource(0,g_VertexBuffer,0,sizeof(stD3DVertex));
-	g_D3DDevice->SetFVF(D3DFVF_VERTEX);
+	//g_D3DDevice->SetStreamSource(0,g_VertexBuffer,0,sizeof(stD3DVertex));
+	//g_D3DDevice->SetFVF(D3DFVF_VERTEX);
 	//g_D3DDevice->DrawPrimitive(D3DPT_POINTLIST, 0, 4);	//绘制4个点
 	//g_D3DDevice->DrawPrimitive(D3DPT_LINELIST,0,2);		//绘制两条线
-	g_D3DDevice->DrawPrimitive(D3DPT_TRIANGLELIST, 0, 1);	//绘制一个三角形
+	//g_D3DDevice->DrawPrimitive(D3DPT_TRIANGLELIST, 0, 1);	//绘制一个三角形
 
 	//g_D3DDevice->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);	//绘制一个四边形(由两个三角形组成)
 
@@ -243,36 +294,14 @@ void RenderScene()
 }
 
 
-
-bool InitializeObjects()
+//释放
+void Shutdown()
 {
-	
+	if (g_D3DDevice != NULL) g_D3DDevice->Release();
+	if (g_D3D != NULL)g_D3D->Release();
+//	if (g_VertexBuffer != NULL)g_VertexBuffer->Release();
 
-
-	//透视数据
-	stD3DVertex objData[] =
-	{
-		{-0.3f,-0.3f,0.0F, D3DCOLOR_XRGB(255, 255,0)},
-		{0.3f, -0.3f,0.0f, D3DCOLOR_XRGB(255, 0, 0)},
-		{0.0f, 0.3f, 0.0f, D3DCOLOR_XRGB(0, 0,255)},
-	};
-
-	//创建一个顶点缓存
-	if(FAILED(g_D3DDevice->CreateVertexBuffer(sizeof(objData), 0,D3DFVF_VERTEX, D3DPOOL_DEFAULT,&g_VertexBuffer,NULL)))
-		return false;
-
-	void *ptr;
-
-	if (g_VertexBuffer->Lock(0, sizeof(objData), (void **)&ptr, 0))
-		return false;
-
-	//数据中的数据拷贝到顶点缓存中
-	memcpy(ptr, objData,sizeof(objData));
-
-	//解锁
-	g_VertexBuffer->Unlock();
-
-	return true;
-
-
+	g_D3DDevice = NULL;
+	g_D3D = NULL;
+//	g_VertexBuffer = NULL;
 }
