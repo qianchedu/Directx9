@@ -13,9 +13,7 @@ LPDIRECT3D9 g_D3D = NULL;
 LPDIRECT3DDEVICE9 g_D3DDevice = NULL;
 
 D3DXMATRIX g_projetion;			//透视矩阵
-D3DXMATRIX g_worldMatrix;		//世界矩阵
-D3DXMATRIX g_translation;		//平移矩阵
-D3DXMATRIX g_rotaltion;			//旋转矩阵
+D3DXMATRIX g_ViewMatrix;		//视图矩阵
 
 float g_angle = 0.0f;
 
@@ -153,16 +151,22 @@ int WINAPI WinMain(HINSTANCE hInst,
 
 bool InitializeD3D(HWND hWnd)
 {
+
+	//显示3d图形的物理设备
 	D3DDISPLAYMODE displayMode;
 
+	//Direct3DCreate9创建一个IDirect3D9接口
 	g_D3D = Direct3DCreate9(D3D_SDK_VERSION);
 	if(g_D3D == NULL)return false;
 
+	//GetAdapterDisplayMode函数获取当前主显卡的信息参数(如：分辨率，刷新频率等)
 	if (FAILED(g_D3D->GetAdapterDisplayMode(D3DADAPTER_DEFAULT, &displayMode)))
 	{
 		return false;
 	}
 
+
+	//为创建Device做准备
 	D3DPRESENT_PARAMETERS d3dpp;
 	ZeroMemory(&d3dpp,sizeof(d3dpp));
 	d3dpp.Windowed = TRUE;
@@ -173,6 +177,28 @@ bool InitializeD3D(HWND hWnd)
 	{
 		return false;
 	}
+
+
+	//透视矩阵
+	D3DXMatrixPerspectiveFovLH(&g_projetion, 45.0f, WINDOW_WIDTH / WINDOW_HEIGHT, 0.1f, 1000.0f);
+
+		//透视投影变换
+	g_D3DDevice->SetTransform(D3DTS_PROJECTION, &g_projetion);
+
+	//3为空间中的向量
+	D3DXVECTOR3 cameraPos(0.0f,0.0f,-5.0f);
+	D3DXVECTOR3 lookAtPos(0.0f, 0.0f, 0.0f);
+	D3DXVECTOR3 upDir(0.0f, 1.0f, 0.0f);
+
+	//D3DXMatrixLookAtLH（函数创建左手坐标系的观察矩阵） 返回的是世界->视图变换矩阵
+	D3DXMatrixLookAtLH(&g_ViewMatrix,&cameraPos,&lookAtPos,&upDir);
+
+	//关闭光照
+	g_D3DDevice->SetRenderState(D3DRS_LIGHTING, FALSE);
+	//取消 背面消隐
+	g_D3DDevice->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
+
+
 
 	//调用
 	if (!InitializeObjects())
@@ -198,14 +224,9 @@ void RenderScene()
 	g_D3DDevice->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_XRGB(0, 0, 0),1.0f,0);
 	g_D3DDevice->BeginScene();
 
-	D3DXMatrixTranslation(&g_translation, 0.0f, 0.0f, 3.0f);
-	D3DXMatrixRotationY(&g_rotaltion, g_angle);
-	g_worldMatrix = g_rotaltion * g_translation;
+	g_D3DDevice->SetTransform(D3DTS_VIEW, &g_ViewMatrix);
+		
 
-	g_angle += 0.01f;
-	if (g_angle >= 360) g_angle = 0.0f;
-
-	g_D3DDevice->SetTransform(D3DTS_WORLD, &g_worldMatrix);
 	//输出显示3d图形
 	g_D3DDevice->SetStreamSource(0,g_VertexBuffer,0,sizeof(stD3DVertex));
 	g_D3DDevice->SetFVF(D3DFVF_VERTEX);
@@ -227,25 +248,13 @@ bool InitializeObjects()
 {
 	
 
-	//透视矩阵
-	D3DXMatrixPerspectiveFovLH(&g_projetion,45.0f,WINDOW_WIDTH/WINDOW_HEIGHT,0.1f,1000.0f);
-
-	////正交投影变换
-	//g_D3DDevice->SetTransform(D3DTS_PROJECTION, &g_ortho);
-		//透视投影变换
-	g_D3DDevice->SetTransform(D3DTS_PROJECTION, &g_projetion);
-	//关闭光照
-	g_D3DDevice->SetRenderState(D3DRS_LIGHTING,FALSE);
-	//取消 背面消隐
-	g_D3DDevice->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
-
 
 	//透视数据
 	stD3DVertex objData[] =
 	{
-		{-0.3f,-0.3f,1.0F, D3DCOLOR_XRGB(255, 255,0)},
-		{0.3f, -0.3f,1.0f, D3DCOLOR_XRGB(255, 0, 0)},
-		{0.0f, 0.3f, 1.0f, D3DCOLOR_XRGB(0, 0,255)},
+		{-0.3f,-0.3f,0.0F, D3DCOLOR_XRGB(255, 255,0)},
+		{0.3f, -0.3f,0.0f, D3DCOLOR_XRGB(255, 0, 0)},
+		{0.0f, 0.3f, 0.0f, D3DCOLOR_XRGB(0, 0,255)},
 	};
 
 	//创建一个顶点缓存
