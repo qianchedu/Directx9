@@ -11,8 +11,13 @@
 #define WINDOW_HEIGHT 480
 LPDIRECT3D9 g_D3D = NULL;
 LPDIRECT3DDEVICE9 g_D3DDevice = NULL;
-D3DXMATRIX g_ortho;		//d3d矩阵
-D3DXMATRIX g_projetion;
+
+D3DXMATRIX g_projetion;			//透视矩阵
+D3DXMATRIX g_worldMatrix;		//世界矩阵
+D3DXMATRIX g_translation;		//平移矩阵
+D3DXMATRIX g_rotaltion;			//旋转矩阵
+
+float g_angle = 0.0f;
 
 LPDIRECT3DVERTEXBUFFER9 g_VertexBuffer = NULL;
 //初始化D3D窗口
@@ -193,6 +198,14 @@ void RenderScene()
 	g_D3DDevice->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_XRGB(0, 0, 0),1.0f,0);
 	g_D3DDevice->BeginScene();
 
+	D3DXMatrixTranslation(&g_translation, 0.0f, 0.0f, 3.0f);
+	D3DXMatrixRotationY(&g_rotaltion, g_angle);
+	g_worldMatrix = g_rotaltion * g_translation;
+
+	g_angle += 0.01f;
+	if (g_angle >= 360) g_angle = 0.0f;
+
+	g_D3DDevice->SetTransform(D3DTS_WORLD, &g_worldMatrix);
 	//输出显示3d图形
 	g_D3DDevice->SetStreamSource(0,g_VertexBuffer,0,sizeof(stD3DVertex));
 	g_D3DDevice->SetFVF(D3DFVF_VERTEX);
@@ -212,8 +225,7 @@ void RenderScene()
 
 bool InitializeObjects()
 {
-	//正交矩阵
-	//D3DXMatrixOrthoLH(&g_ortho,WINDOW_WIDTH,WINDOW_HEIGHT,0.1F,1000.0f);
+	
 
 	//透视矩阵
 	D3DXMatrixPerspectiveFovLH(&g_projetion,45.0f,WINDOW_WIDTH/WINDOW_HEIGHT,0.1f,1000.0f);
@@ -226,25 +238,6 @@ bool InitializeObjects()
 	g_D3DDevice->SetRenderState(D3DRS_LIGHTING,FALSE);
 	//取消 背面消隐
 	g_D3DDevice->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
-
-
-//	unsigned long col = D3DCOLOR_XRGB(255, 255, 255);
-	//定义一些数据
-	//stD3DVertex objData[] = 
-	//{
-	//	{420.0f,150.0f,0.5,1.0f,col,},
-	//	{420.0f,350.0f,0.5,1.0f,col,},
-	//	{220.0f,150.0f,0.5,1.0f,col,},
-	//	{220.0f,350.0f,0.5,1.0f,col,},
-	//};
-
-	//正交数据
-	/*stD3DVertex objData[] = 
-	{
-		{-150.0f,-150.0f,0.1F, D3DCOLOR_XRGB(255, 255,0)},
-		{150.0f, -150.0f,0.1f, D3DCOLOR_XRGB(255, 0, 0)},
-		{0.0f,   150.0f, 0.1f, D3DCOLOR_XRGB(0, 0,255)},
-	};*/
 
 
 	//透视数据
